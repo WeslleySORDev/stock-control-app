@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { AddQuantityModal } from "@/components/add-quantity-modal";
 import { AddProductModal } from "@/components/add-product-modal";
 import type { Product, InventoryItem } from "@/types/product";
-import { useInventoryCount } from "@/contexts/InventoryCountContext";
+import { useInventoryCount } from "@/contexts/StockContext";
 
 // Produtos simulados - em produção viriam de um banco de dados
 const mockProducts: Product[] = [

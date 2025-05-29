@@ -10,7 +10,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { useInventoryCount } from "@/contexts/InventoryCountContext";
+import { useInventoryCount } from "@/contexts/StockContext";
 
 export default function HomePage() {
   const { inventoryCounts } = useInventoryCount();

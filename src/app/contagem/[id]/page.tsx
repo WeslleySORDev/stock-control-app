@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useExport } from "@/hooks/use-export";
 import type { InventoryCount } from "@/types/product";
-import { useInventoryCount } from "@/contexts/InventoryCountContext";
+import { useInventoryCount } from "@/contexts/StockContext";
 
 interface ContagemPageProps {
   id: string;
