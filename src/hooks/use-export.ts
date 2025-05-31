@@ -1,9 +1,9 @@
 "use client";
 import { useCallback } from "react";
-import type { InventoryCount } from "@/types/product";
+import type { Stock } from "@/types/inventory";
 
 export function useExport() {
-  const exportToPDF = useCallback(async (inventoryCount: InventoryCount) => {
+  const exportToPDF = useCallback(async (inventoryCount: Stock) => {
     try {
       // Importação dinâmica para reduzir o bundle size
       const jsPDF = (await import("jspdf")).default;
@@ -45,14 +45,14 @@ export function useExport() {
       yPosition += 10;
 
       pdf.setFont("helvetica", "normal");
-      const totalQuantity = inventoryCount.items.reduce(
+      const totalQuantity = inventoryCount.products.reduce(
         (sum, item) => sum + item.quantity,
         0
       );
-      const totalProducts = inventoryCount.items.length;
+      const totalProducts = inventoryCount.products.length;
 
       pdf.text(
-        `Data da Contagem: ${new Date(inventoryCount.date).toLocaleDateString(
+        `Data da Contagem: ${new Date(inventoryCount.created_at).toLocaleDateString(
           "pt-BR"
         )}`,
         margin,
@@ -95,7 +95,7 @@ export function useExport() {
 
       // Linhas da tabela
       pdf.setFont("helvetica", "normal");
-      inventoryCount.items.forEach((item, index) => {
+      inventoryCount.products.forEach((item, index) => {
         checkPageBreak(15);
 
         // Fundo alternado
@@ -105,18 +105,18 @@ export function useExport() {
         }
 
         // Texto das células
-        pdf.text(item.product.code, colPositions[0] + 2, yPosition);
+        pdf.text(item.code, colPositions[0] + 2, yPosition);
 
         // Nome do produto (com quebra de linha se necessário)
         const nameLines = pdf.splitTextToSize(
-          item.product.name,
+          item.name,
           colWidths[1] - 4
         );
         pdf.text(nameLines[0], colPositions[1] + 2, yPosition);
 
         // Descrição (com quebra de linha se necessário)
         const descLines = pdf.splitTextToSize(
-          item.product.description,
+          item.description,
           colWidths[2] - 4
         );
         pdf.text(descLines[0], colPositions[2] + 2, yPosition);
@@ -159,9 +159,9 @@ export function useExport() {
     }
   }, []);
 
-  const exportToCSV = useCallback((inventoryCount: InventoryCount) => {
+  const exportToCSV = useCallback((inventoryCount: Stock) => {
     try {
-      const totalQuantity = inventoryCount.items.reduce(
+      const totalQuantity = inventoryCount.products.reduce(
         (sum, item) => sum + item.quantity,
         0
       );
@@ -169,18 +169,18 @@ export function useExport() {
       // Cabeçalho do CSV
       let csvContent = `Relatório de Contagem de Estoque\n`;
       csvContent += `Nome da Contagem,${inventoryCount.name}\n`;
-      csvContent += `Data,${new Date(inventoryCount.date).toLocaleDateString(
+      csvContent += `Data,${new Date(inventoryCount.created_at).toLocaleDateString(
         "pt-BR"
       )}\n`;
-      csvContent += `Total de Produtos,${inventoryCount.items.length}\n`;
+      csvContent += `Total de Produtos,${inventoryCount.products.length}\n`;
       csvContent += `Total de Itens,${totalQuantity}\n\n`;
 
       // Cabeçalho da tabela
       csvContent += `Código,Nome do Produto,Descrição,Quantidade\n`;
 
       // Dados dos itens
-      inventoryCount.items.forEach((item) => {
-        csvContent += `"${item.product.code}","${item.product.name}","${item.product.description}",${item.quantity}\n`;
+      inventoryCount.products.forEach((item) => {
+        csvContent += `"${item.code}","${item.name}","${item.description}",${item.quantity}\n`;
       });
 
       // Linha de total

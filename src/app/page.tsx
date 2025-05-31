@@ -10,10 +10,13 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { useInventoryCount } from "@/contexts/StockContext";
+
+import { InventoryCount } from "@/types/inventory";
 
 export default function HomePage() {
-  const { inventoryCounts } = useInventoryCount();
+  const getInventoryCountTotalItems = (inventoryCount: InventoryCount) => {
+    return inventoryCount.products.reduce((acc, product) => acc + product.quantity, 0);
+  }
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto px-4 py-8">
@@ -35,18 +38,18 @@ export default function HomePage() {
         </div>
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {inventoryCounts.map((count) => (
+          {/* {TEST_INVENTORY_COUNT_LIST.map((count) => (
             <Link href={`/contagem/${count.id}`} key={count.id}>
               <Card className="hover:shadow-lg transition-shadow cursor-pointer">
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <Package className="h-8 w-8 text-blue-600" />
-                    <Badge variant="secondary">{count.total} itens</Badge>
+                    <Badge variant="secondary">{getInventoryCountTotalItems(count)} itens</Badge>
                   </div>
                   <CardTitle className="text-xl">{count.name}</CardTitle>
                   <CardDescription className="flex items-center gap-2">
                     <Calendar className="h-4 w-4" />
-                    {new Date(count.date).toLocaleDateString("pt-BR")}
+                    {new Date(count.created_at).toLocaleDateString("pt-BR")}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -56,16 +59,16 @@ export default function HomePage() {
                     </span>
                     <div className="flex items-center gap-1">
                       <Hash className="h-4 w-4 text-gray-400" />
-                      <span className="font-semibold">{count.total}</span>
+                      <span className="font-semibold">{getInventoryCountTotalItems(count)}</span>
                     </div>
                   </div>
                 </CardContent>
               </Card>
             </Link>
-          ))}
+          ))} */}
         </div>
 
-        {inventoryCounts.length === 0 && (
+        {/* {TEST_INVENTORY_COUNT_LIST.length === 0 && (
           <div className="text-center py-12">
             <Package className="h-16 w-16 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-gray-900 mb-2">
@@ -81,7 +84,7 @@ export default function HomePage() {
               </Button>
             </Link>
           </div>
-        )}
+        )} */}
       </div>
     </div>
   );

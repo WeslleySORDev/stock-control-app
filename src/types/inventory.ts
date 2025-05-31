@@ -1,16 +1,13 @@
-export type Stock = {
+export type InventoryCount = {
   id: string;
   owner: string;
   name: string;
-  created_at: string;
+  created_at: number;
   products: Product[];
-  product_count: number;
 };
 
 export type Product = {
-  id: string;
   name: string;
-  description: string;
   code: string;
   quantity: number;
 };

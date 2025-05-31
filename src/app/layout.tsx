@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Roboto } from "next/font/google";
 import "./globals.css";
-import { InventoryCountProvider } from "@/contexts/StockContext";
+import { InventoryCountProvider } from "@/contexts/InventoryCountContext";
 
 const roboto = Roboto({
   variable: "--font-roboto",

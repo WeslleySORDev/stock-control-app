@@ -10,68 +10,61 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { AddQuantityModal } from "@/components/add-quantity-modal";
 import { AddProductModal } from "@/components/add-product-modal";
-import type { Product, InventoryItem } from "@/types/product";
-import { useInventoryCount } from "@/contexts/StockContext";
-
-// Produtos simulados - em produção viriam de um banco de dados
-const mockProducts: Product[] = [
-  {
-    id: "1",
-    name: "Notebook Dell Inspiron",
-    description: "Notebook Dell Inspiron 15 3000",
-    code: "NB001",
-  },
-  {
-    id: "2",
-    name: "Mouse Logitech",
-    description: "Mouse óptico sem fio Logitech M170",
-    code: "MS002",
-  },
-  {
-    id: "3",
-    name: "Teclado Mecânico",
-    description: "Teclado mecânico RGB Redragon",
-    code: "KB003",
-  },
-];
+import type { InventoryCount, Product } from "@/types/inventory";
+import { useInventoryCount } from "@/contexts/InventoryCountContext";
 
 export default function NovaContagemPage() {
-  const { addInventoryCount } = useInventoryCount();
+  const { addInventoryCountToList } = useInventoryCount();
   const [countName, setCountName] = useState("");
   const [ownerName, setOwnerName] = useState("");
-  const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
-  const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
+  const [inventoryProducts, setInventoryProducts] = useState<Product[]>([]);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isAddQuantityModalOpen, setIsAddQuantityModalOpen] = useState(false);
   const [isAddProductModalOpen, setIsAddProductModalOpen] = useState(false);
 
-  const handleQuantityChange = (productId: string, newQuantity: number) => {
-    setInventoryItems((prev) =>
-      prev.map((item) =>
-        item.product.id === productId
-          ? { ...item, quantity: Math.max(0, newQuantity) }
-          : item
+  const handleQuantityChange = (productCode: string, newQuantity: number) => {
+    setInventoryProducts((prev) =>
+      prev.map((product) =>
+        product.code === productCode
+          ? { ...product, quantity: Math.max(0, newQuantity) }
+          : product
       )
     );
   };
 
   const handleAddQuantity = (quantity: number) => {
-    if (selectedItem) {
+    if (selectedProduct) {
       handleQuantityChange(
-        selectedItem.product.id,
-        selectedItem.quantity + quantity
+        selectedProduct.code,
+        selectedProduct.quantity + quantity
       );
     }
     setIsAddQuantityModalOpen(false);
-    setSelectedItem(null);
+    setSelectedProduct(null);
   };
 
   const handleAddProduct = (product: Product) => {
-    setInventoryItems((prev) => [...prev, { product, quantity: 0 }]);
+    setInventoryProducts((prev) => [...prev, product]);
     setIsAddProductModalOpen(false);
   };
 
-  const totalItems = inventoryItems.reduce(
-    (sum, item) => sum + item.quantity,
+  const saveInventoryCountOnFirebase = () => {
+    const inventoryCount: Omit<InventoryCount, "id" | "created_at"> = {
+      name: countName,
+      products: inventoryProducts,
+      owner: ownerName
+    }
+    setCountName("");
+    setOwnerName("");
+    setInventoryProducts([])
+    setSelectedProduct(null);
+    setIsAddQuantityModalOpen(false)
+    setIsAddProductModalOpen(false)
+    return addInventoryCountToList(inventoryCount)
+  }
+
+  const totalItems = inventoryProducts.reduce(
+    (sum, product) => sum + product.quantity,
     0
   );
 
@@ -137,9 +130,9 @@ export default function NovaContagemPage() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {inventoryItems.map((item) => (
+                  {inventoryProducts.map((product) => (
                     <div
-                      key={item.product.id}
+                      key={product.code}
                       className="flex items-center justify-between p-4 border rounded-lg"
                     >
                       <div className="flex-1">
@@ -147,13 +140,10 @@ export default function NovaContagemPage() {
                           <Package className="h-5 w-5 text-gray-400" />
                           <div>
                             <h3 className="font-semibold">
-                              {item.product.name}
+                              {product.name}
                             </h3>
-                            <p className="text-sm text-gray-600">
-                              {item.product.description}
-                            </p>
                             <Badge variant="outline" className="mt-1">
-                              Código: {item.product.code}
+                              Código: {product.code}
                             </Badge>
                           </div>
                         </div>
@@ -165,20 +155,20 @@ export default function NovaContagemPage() {
                             size="icon"
                             onClick={() =>
                               handleQuantityChange(
-                                item.product.id,
-                                item.quantity - 1
+                                product.code,
+                                product.quantity - 1
                               )
                             }
-                            disabled={item.quantity <= 0}
+                            disabled={product.quantity <= 0}
                           >
                             <Minus className="h-4 w-4" />
                           </Button>
                           <Input
                             type="number"
-                            value={item.quantity}
+                            value={product.quantity}
                             onChange={(e) =>
                               handleQuantityChange(
-                                item.product.id,
+                                product.code,
                                 Number.parseInt(e.target.value) || 0
                               )
                             }
@@ -189,7 +179,7 @@ export default function NovaContagemPage() {
                             variant="outline"
                             size="icon"
                             onClick={() => {
-                              setSelectedItem(item);
+                              setSelectedProduct(product);
                               setIsAddQuantityModalOpen(true);
                             }}
                           >
@@ -214,7 +204,7 @@ export default function NovaContagemPage() {
                   <div className="flex justify-between">
                     <span className="text-gray-600">Total de produtos:</span>
                     <span className="font-semibold">
-                      {inventoryItems.length}
+                      {inventoryProducts.length}
                     </span>
                   </div>
                   <div className="flex justify-between">
@@ -229,6 +219,7 @@ export default function NovaContagemPage() {
                   </div>
                   <div className="pt-4 border-t">
                     <Button
+                      onClick={saveInventoryCountOnFirebase}
                       className="w-full"
                       disabled={!countName.trim() || !ownerName.trim()}
                     >
@@ -246,10 +237,10 @@ export default function NovaContagemPage() {
         isOpen={isAddQuantityModalOpen}
         onClose={() => {
           setIsAddQuantityModalOpen(false);
-          setSelectedItem(null);
+          setSelectedProduct(null);
         }}
         onConfirm={handleAddQuantity}
-        productName={selectedItem?.product.name || ""}
+        productName={selectedProduct?.name || ""}
       />
 
       <AddProductModal

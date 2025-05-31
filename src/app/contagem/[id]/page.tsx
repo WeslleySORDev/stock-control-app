@@ -22,8 +22,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useExport } from "@/hooks/use-export";
-import type { InventoryCount } from "@/types/product";
-import { useInventoryCount } from "@/contexts/StockContext";
+import { InventoryCount } from "@/types/inventory";
 
 interface ContagemPageProps {
   id: string;
@@ -33,17 +32,42 @@ interface ContagemComponentProps {
   params: Promise<ContagemPageProps>;
 }
 
+const TEST_INVENTORY_COUNT: InventoryCount = {
+  id: "1",
+  owner: "Weslley",
+  name: "Contagem Rhai",
+  created_at: "05-30-2025",
+  products: [
+    {
+      code: "M3500",
+      name: "Massa Poliester",
+      quantity: 5
+    },
+    {
+      code: "8000",
+      name: "Verniz 8000 kit",
+      quantity: 12
+    },
+    {
+      code: "8937",
+      name: "Verniz 8937",
+      quantity: 35
+    }
+  ]
+}
+
+const TEST_INVENTORY_COUNT_LIST: InventoryCount[] = [TEST_INVENTORY_COUNT]
+
 export default function ContagemPage({ params }: ContagemComponentProps) {
   const resolvedParams = React.use(params);
   const { id } = resolvedParams;
-  const { inventoryCounts } = useInventoryCount();
-  const [inventoryCount] = useState<InventoryCount | null>(
-    inventoryCounts.find((count) => count.id === id) || null
+  const [currentStockCount] = useState<InventoryCount | null>(
+    TEST_INVENTORY_COUNT_LIST.find((count) => count.id === id) || null
   );
   const [isExporting, setIsExporting] = useState(false);
   const { exportToPDF, exportToCSV, printReport } = useExport();
 
-  if (!inventoryCount) {
+  if (!currentStockCount) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -65,23 +89,23 @@ export default function ContagemPage({ params }: ContagemComponentProps) {
     );
   }
 
-  const totalQuantity = inventoryCount.items.reduce(
+  const totalQuantity = currentStockCount.products.reduce(
     (sum, item) => sum + item.quantity,
     0
   );
-  const totalProducts = inventoryCount.items.length;
+  const totalProducts = currentStockCount.products.length;
 
   const handleExportPDF = async () => {
     setIsExporting(true);
     try {
-      await exportToPDF(inventoryCount);
+      await exportToPDF(currentStockCount);
     } finally {
       setIsExporting(false);
     }
   };
 
   const handleExportCSV = () => {
-    exportToCSV(inventoryCount);
+    exportToCSV(currentStockCount);
   };
 
   const handlePrint = () => {
@@ -100,7 +124,7 @@ export default function ContagemPage({ params }: ContagemComponentProps) {
             </Link>
             <div>
               <h1 className="text-3xl font-bold text-gray-900">
-                {inventoryCount.name}
+                {currentStockCount.name}
               </h1>
               <p className="text-gray-600 mt-2">
                 Visualização da contagem de inventário
@@ -119,24 +143,21 @@ export default function ContagemPage({ params }: ContagemComponentProps) {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {inventoryCount.items.map((item, index) => (
-                      <div key={item.product.id}>
+                    {currentStockCount.products.map((item, index) => (
+                      <div key={item.code}>
                         <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg print:bg-white print:border print:border-gray-300">
                           <div className="flex-1">
                             <div className="flex items-center gap-3">
                               <Package className="h-5 w-5 text-gray-400 print:hidden" />
                               <div>
                                 <h3 className="font-semibold text-gray-900">
-                                  {item.product.name}
+                                  {item.name}
                                 </h3>
-                                <p className="text-sm text-gray-600">
-                                  {item.product.description}
-                                </p>
                                 <Badge
                                   variant="outline"
                                   className="mt-1 print:border-gray-400"
                                 >
-                                  Código: {item.product.code}
+                                  Código: {item.code}
                                 </Badge>
                               </div>
                             </div>
@@ -150,7 +171,7 @@ export default function ContagemPage({ params }: ContagemComponentProps) {
                             </div>
                           </div>
                         </div>
-                        {index < inventoryCount.items.length - 1 && (
+                        {index < currentStockCount.products.length - 1 && (
                           <Separator className="my-4 print:hidden" />
                         )}
                       </div>
@@ -178,7 +199,7 @@ export default function ContagemPage({ params }: ContagemComponentProps) {
                         </span>
                       </div>
                       <div className="text-lg font-semibold">
-                        {new Date(inventoryCount.date).toLocaleDateString(
+                        {new Date(currentStockCount.created_at).toLocaleDateString(
                           "pt-BR",
                           {
                             weekday: "long",
